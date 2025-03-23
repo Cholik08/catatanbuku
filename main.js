@@ -33,7 +33,7 @@ const getBookList = () => {
 }
 
 const renderBookList = () => {
-    const belumDibaca = document.querySelector('#incompleteBookList');
+    const belumDibaca = document.getElementById('inCompleteBookList');
     const bookData = getBookList();
     const filterBook = bookData.filter((book) => book.isComplete === false);
 
@@ -41,46 +41,51 @@ const renderBookList = () => {
 
     for (let book of filterBook){
 
-        let row = document.createElement('div');
-        row.setAttribute('data-bookid',book.id);
-        row.setAttribute('data-testid','bookItem');
-
-        row.innerHTML += 
-        `<h3 data-testid="bookItemTitle">${book.title}</h3>
-        <p data-testid="bookItemAuthor">Penulis: ${book.author}</p>
-        <p data-testid="bookItemYear">Tahun: ${book.year}</p>
-        <div>
-            <button data-testid="bookItemIsCompleteButton" onclick={addComplete(${book.id})}>selesai dibaca</button>
-            <button data-testid="bookItemDeleteButton" onclick={deleteBook(${book.id})}>hapus</button>
-            <button data-testid="bookItemEditButton">edit</button>
-        </div>`;
-        belumDibaca.appendChild(row);
+        belumDibaca.innerHTML += 
+        `<tr>
+            <td>${book.title}</td>
+            <td>${book.author}</td>
+            <td>${book.year}</td>
+            <td>
+                <div class='d-flex justify-content-center'>
+                    <button class='btn btn-sm btn-success me-1' onclick={addComplete(${book.id})}>selesai dibaca</button>
+                    <button class='btn btn-sm btn-danger me-1' onclick={deleteBook(${book.id})}>hapus</button>
+                    <button class='btn btn-sm btn-warning' onclick={editBook(${book.id})}>edit</button>
+                </div>
+            </td>
+        </tr>`;
     }
 }
 
 const renderBookListComplete = () => {
     const bookData = getBookList();
-    const selesaiDibaca = document.querySelector('#completeBookList');
+    const selesaiDibaca = document.getElementById('completeBookList');
     const filterBook = bookData.filter((book) => book.isComplete === true);
 
     selesaiDibaca.innerHTML = '';
 
     for (let book of filterBook){
-        let row = document.createElement('div');
-        row.setAttribute('data-bookid',book.id);
-        row.setAttribute('data-testid','bookItem');
-
-        row.innerHTML += 
-        `<h3 data-testid="bookItemTitle">${book.title}</h3>
-        <p data-testid="bookItemAuthor">Penulis: ${book.author}</p>
-        <p data-testid="bookItemYear">Tahun: ${book.year}</p>
-        <div>
-            <button data-testid="bookItemIsCompleteButton" onclick={addnoComplete(${book.id})}>belum selesai</button>
-            <button data-testid="bookItemDeleteButton" onclick={deleteBookComplete(${book.id})}>hapus</button>
-            <button data-testid="bookItemEditButton">edit</button>
-        </div>`;
-        selesaiDibaca.appendChild(row);
+        selesaiDibaca.innerHTML += 
+        `<tr>
+            <td>${book.title}</td>
+            <td>${book.author}</td>
+            <td>${book.year}</td>
+            <td>
+                <div class='d-flex justify-content-center'>
+                    <button class='btn btn-sm btn-success me-1' onclick={addComplete(${book.id})}>selesai dibaca</button>
+                    <button class='btn btn-sm btn-danger me-1' onclick={deleteBook(${book.id})}>hapus</button>
+                    <button class='btn btn-sm btn-warning' onclick={editBook(${book.id})}>edit</button>
+                </div>
+            </td>
+        </tr>`;
     }
+}
+
+const refBook = () => {
+    belumDibaca.setAttribute('class','visible');
+    sudahDibaca.setAttribute('class','visible');
+    const hasilCari = document.getElementById('pencarianBuku');
+    hasilCari.setAttribute('class','d-none')
 }
 
 const deleteBook = (id) => {
@@ -91,6 +96,8 @@ const deleteBook = (id) => {
         const filterBook = bookData.filter((book) => book.id !== idBookDelete);
         localStorage.setItem(storageKey,JSON.stringify(filterBook));
         renderBookList();
+        renderBookListComplete();
+        refBook();
     }
 }
 
@@ -101,7 +108,9 @@ const deleteBookComplete = (id) => {
         const idBookDelete = id.toString();
         const filterBook = bookData.filter((book) => book.id !== idBookDelete);
         localStorage.setItem(storageKey,JSON.stringify(filterBook));
+        renderBookList();
         renderBookListComplete();
+        refBook();
     }
 }
 
@@ -126,6 +135,7 @@ const addComplete = (id) => {
         putBookList(newBookComplete);
         renderBookList();
         renderBookListComplete();
+        refBook();
     }
 }
 
@@ -150,7 +160,51 @@ const addnoComplete = (id) => {
         putBookList(newBookComplete);
         renderBookList();
         renderBookListComplete();
+        refBook();
     }
+}
+
+const editBook = (id) => {
+    
+    bookForm.setAttribute('class','d-none');
+
+    bookEdit.setAttribute('class','d-flex justify-content-center');
+
+    const idBook = id.toString();
+    const bookData = getBookList();
+    const findBook = bookData.find((book) => book.id === idBook);
+    const indexBook = bookData.findIndex((book) => book.id === idBook);
+
+    const bookFormTitleEdit = document.getElementById('bookFormTitleEdit');
+    const bookFormAuthorEdit = document.getElementById('bookFormAuthorEdit');
+    const bookFormYearEdit = document.getElementById('bookFormYearEdit');
+
+    bookFormTitleEdit.value = findBook.title;
+    bookFormAuthorEdit.value = findBook.author;
+    bookFormYearEdit.value = findBook.year;
+
+    const bookFormEdit = document.getElementById('bookFormEdit');
+    bookFormEdit.addEventListener('submit',(e) => {
+        e.preventDefault();
+        
+        const newBookComplete = {
+            id : findBook.id,
+            title : bookFormTitleEdit.value,
+            author : bookFormAuthorEdit.value,
+            year : bookFormYearEdit.value,
+            isComplete : findBook.isComplete
+        }
+        
+        bookData.splice(indexBook,1,newBookComplete);
+        localStorage.setItem(storageKey,JSON.stringify(bookData));
+        renderBookList();
+        renderBookListComplete();
+        refBook();
+
+        bookForm.setAttribute('class','visible w-50');
+
+        bookEdit.setAttribute('class','d-none');
+    });
 }
 
 bookForm.addEventListener('submit',(e)=>{
@@ -187,6 +241,64 @@ bookForm.addEventListener('submit',(e)=>{
     
         putBookList(newBookData);
         renderBookListComplete();
+    }
+})
+
+const searchSubmit = document.getElementById('searchBook');
+searchSubmit.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const hasilCari = document.getElementById('pencarianBuku');
+    const belumDibaca = document.getElementById('belumDibaca');
+    const sudahDibaca = document.getElementById('sudahDibaca');
+    const tidakDitemukanBuku = document.getElementById('tidakDitemukanBuku')
+
+    if (localStorage.getItem(storageKey) === null){
+        hasilCari.setAttribute('class','cari-buku')
+    }
+    else{
+        let searchTitle = document.getElementById('searchBookTitle').value;
+        const searchValue = searchTitle.toLowerCase();
+        const bookData = getBookList();
+        const filterBook = bookData.filter((book) => book.title.toLowerCase() === searchValue || book.author.toLowerCase() === searchValue || book.year.toString() === searchValue);
+
+        const pencarianBuku = document.getElementById('searchBookList');
+
+        pencarianBuku.innerHTML = '';
+        for (let book of filterBook){
+
+            let status = '';
+            let p = '';
+            if (book.isComplete === false){
+                status = 'belum selesai';
+                p = 'text-danger';
+            }
+            else{
+                status = 'selesai';
+                p = 'text-success';
+            }
+
+            pencarianBuku.innerHTML += 
+            `<tr>
+                <td>${book.title}</td>
+                <td>${book.author}</td>
+                <td>${book.year}</td>
+                <td class='${p} text-center'>${status}</td>
+                <td>
+                    <div class='d-flex justify-content-center'>
+                        <button class='btn btn-sm btn-success me-1' onclick={addComplete(${book.id})}>belum dibaca</button>
+                        <button class='btn btn-sm btn-danger me-1' onclick={deleteBook(${book.id})}>hapus</button>
+                        <button class='btn btn-sm btn-warning'>edit</button>
+                    </div>
+                </td>
+            </tr>`;
+
+            tidakDitemukanBuku.setAttribute('class','d-none');
+        }
+
+        hasilCari.setAttribute('class','cari-buku');
+        belumDibaca.setAttribute('class','invisible');
+        sudahDibaca.setAttribute('class','invisible');
     }
 })
 
